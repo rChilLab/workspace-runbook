@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snippet-Lib // Modern Workplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0E14;
+    --panel: #12161F;
+    --panel-hover: #161B26;
+    --border: #232938;
+    --text: #E6E9EF;
+    --text-muted: #8B93A7;
+    --accent: #5391FE;
+    --accent-dim: #2A4A8C;
+    --amber: #F5A623;
+    --code-bg: #0D1017;
+    --code-text: #C8D0E0;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  :root[data-theme="light"]{
+    --bg: #F7F8FA;
+    --panel: #FFFFFF;
+    --panel-hover: #EEF1F5;
+    --border: #E1E4EA;
+    --text: #1A1F29;
+    --text-muted: #6B7280;
+    --accent: #2E63D6;
+    --accent-dim: #B7CBF5;
+    --amber: #B7791F;
+    --code-bg: #F0F2F6;
+    --code-text: #24303F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height:100vh;
+    padding: 32px 20px 80px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; }
+
+  header{
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand{
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1{
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .theme-toggle{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .theme-toggle:hover{ color: var(--text); border-color: var(--accent-dim); }
+  .theme-toggle svg{ width: 16px; height: 16px; }
+  .theme-toggle .icon-moon{ display: block; }
+  .theme-toggle .icon-sun{ display: none; }
+  :root[data-theme="light"] .theme-toggle .icon-moon{ display: none; }
+  :root[data-theme="light"] .theme-toggle .icon-sun{ display: block; }
+
+  /* Prompt-style search — das Signature-Element */
+  .prompt{
+    display:flex;
+    align-items:center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin: 24px 0 16px;
+    font-family: var(--mono);
+    transition: border-color .15s ease;
+  }
+  .prompt:focus-within{ border-color: var(--accent-dim); }
+  .prompt-label{
+    color: var(--accent);
+    font-size: 14px;
+    white-space: nowrap;
+    margin-right: 10px;
+    user-select: none;
+  }
+  .prompt input{
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .prompt input::placeholder{ color: var(--text-muted); }
+  .cursor{
+    width: 7px; height: 15px;
+    background: var(--accent);
+    animation: blink 1.1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  .tags{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .tag{
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    transition: all .12s ease;
+  }
+  .tag:hover{ color: var(--text); }
+  .tag.active{
+    background: var(--panel-hover);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .count{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+  .count .status{ color: var(--text-muted); }
+  .count .status.error{ color: var(--amber); }
+
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card{
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head{
+    padding: 16px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease;
+  }
+  .card-head:hover{ background: var(--panel-hover); }
+  .card-title-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title{
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .card-meta{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .lang-badge{
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .card-tags-preview{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .card-tags-preview .card-tag{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+  .card-tags-preview .card-tag::before{ content: "#"; opacity: 0.5; }
+
+  .prereqs{
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .prereqs-label{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .prereqs ul{
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .prereqs li{
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding-left: 12px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .prereqs li::before{
+    content: "–";
+    position: absolute;
+    left: 0;
+    opacity: 0.5;
+  }
+
+  .chevron{
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--text-muted);
+    border-bottom: 1.5px solid var(--text-muted);
+    transform: rotate(-45deg);
+  }
+
+  /* --- Modal --- */
+  .modal-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8vh 20px;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .modal-overlay.open{ display: flex; }
+  .modal-panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-width: 680px;
+    width: 100%;
+    padding: 26px 26px 28px;
+  }
+  .modal-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .modal-title{
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .modal-close{
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .modal-close:hover{ color: var(--text); background: var(--panel-hover); }
+  .modal-close svg{ width: 16px; height: 16px; }
+  .modal-lang{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 16px;
+  }
+  .modal-desc{
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .card-tags{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 4px; }
+  .card-tag{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .card-tag::before{ content: "#"; opacity: 0.5; }
+
+  .code-block{
+    position: relative;
+    background: var(--code-bg);
+    margin-top: 14px;
+    border-radius: 6px;
+  }
+  .code-block pre{
+    padding: 16px 18px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--code-text);
+  }
+  .copy-btn{
+    position: absolute;
+    top: 10px; right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: color .12s ease;
+  }
+  .copy-btn svg{ width: 12px; height: 12px; }
+  .copy-btn:hover{ color: var(--text); }
+  .copy-btn.copied{ color: var(--accent); }
+
+  .empty{
+    text-align:center;
+    padding: 70px 20px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    grid-column: 1 / -1;
+  }
+
+  footer{
+    margin-top: 40px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">PS&gt; Modern Workplace</div>
+      <h1>Snippet Library</h1>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    </button>
+  </header>
+
+  <div class="prompt">
+    <span class="prompt-label">PS C:\Snippets&gt;</span>
+    <input id="search" type="text" placeholder="find --tag" autocomplete="off">
+    <span class="cursor"></span>
+  </div>
+
+  <div class="tags" id="tags"></div>
+  <div class="count">
+    <span id="countText"></span>
+    <span class="status" id="status"></span>
+  </div>
+  <div id="results" class="grid"></div>
+  <div class="empty" id="empty" style="display:none;">
+    No matches. Try a different search or tag filter.
+  </div>
+
+  <footer>Each card is a Markdown file under /snippets · edited directly in Git</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-panel" id="modalPanel" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+let allSnippets = [];
+let activeTag = null;
+
+/* --- GitHub source config ---
+   Public repo required for this to work without a token (raw.githubusercontent.com
+   allows unauthenticated cross-origin fetches for public repos).
+   Replace owner/repo/branch with your actual GitHub repo. */
+const GITHUB_CONFIG = {
+  owner: 'YOUR-GITHUB-USERNAME',
+  repo: 'snippet-lib',
+  branch: 'main'
+};
+const SNIPPETS_BASE =
+  `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/snippets`;
+
+/* --- Loading & parsing the Markdown files --- */
+
+async function loadSnippets(){
+  const statusEl = document.getElementById('status');
+  try{
+    statusEl.textContent = 'Loading manifest.json …';
+    const manifestRes = await fetch(`${SNIPPETS_BASE}/manifest.json`);
+    if(!manifestRes.ok) throw new Error('manifest.json not found on GitHub');
+    const filenames = await manifestRes.json();
+
+    statusEl.textContent = `Loading ${filenames.length} snippets from GitHub …`;
+
+    const files = await Promise.all(
+      filenames.map(name =>
+        fetch(`${SNIPPETS_BASE}/${name}`).then(r => {
+          if(!r.ok) throw new Error(`${name} not found`);
+          return r.text();
+        })
+      )
+    );
+
+    allSnippets = files.map((text, i) => parseSnippet(text, filenames[i])).filter(Boolean);
+    statusEl.textContent = '';
+    renderTags();
+    render();
+    startTypewriter(collectTags());
+  }catch(e){
+    statusEl.textContent = 'Failed to load';
+    statusEl.classList.add('error');
+    document.getElementById('results').innerHTML =
+      `<div class="empty">Could not load snippets from GitHub (${escapeHtml(e.message)}).<br>
+       Check GITHUB_CONFIG (owner/repo/branch) at the top of the script, and make sure the repo is public.</div>`;
+    startTypewriter(shuffle([...fallbackWords]));
+  }
+}
+
+function collectTags(){
+  const tagSet = new Set();
+  allSnippets.forEach(s => s.tags.forEach(t => tagSet.add(t)));
+  const words = [...tagSet];
+  return words.length ? shuffle(words) : shuffle([...fallbackWords]);
+}
+
+function parseSnippet(text, filename){
+  const match = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  if(!match){
+    console.warn(`${filename}: no valid frontmatter found`);
+    return null;
+  }
+  const meta = parseFrontmatter(match[1]);
+  const body = match[2];
+
+  const codeMatch = body.match(/```(\w*)\n([\s\S]*?)```/);
+  let description = body.trim();
+  let code = '';
+  if(codeMatch){
+    description = body.slice(0, codeMatch.index).trim();
+    code = codeMatch[2].replace(/\n$/, '');
+    if(!meta.language) meta.language = codeMatch[1] || 'powershell';
+  }
+
+  return {
+    id: meta.id || filename.replace(/\.md$/, ''),
+    title: meta.title || filename,
+    language: meta.language || 'powershell',
+    tags: meta.tags || [],
+    prerequisites: meta.prerequisites || [],
+    description,
+    code
+  };
+}
+
+/* Simple YAML parser for flat frontmatter blocks (key: value, key: [a, b]) */
+function parseFrontmatter(yamlBlock){
+  const meta = {};
+  yamlBlock.split('\n').forEach(line => {
+    const idx = line.indexOf(':');
+    if(idx === -1) return;
+    const key = line.slice(0, idx).trim();
+    let value = line.slice(idx + 1).trim();
+
+    if(value.startsWith('[') && value.endsWith(']')){
+      const inner = value.slice(1, -1).trim();
+      value = inner.length
+        ? inner.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''))
+        : [];
+    } else {
+      value = value.replace(/^["']|["']$/g, '');
+    }
+    meta[key] = value;
+  });
+  return meta;
+}
+
+/* --- Rendering (unchanged from the previous version) --- */
+
+function renderTags(){
+  const tagSet = new Set();
+  allSnippets.forEach(s => s.tags.forEach(t => tagSet.add(t)));
+  const container = document.getElementById('tags');
+  container.innerHTML = '';
+  [...tagSet].sort().forEach(tag => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.textContent = tag;
+    el.onclick = () => {
+      activeTag = activeTag === tag ? null : tag;
+      renderTagState();
+      render();
+    };
+    el.dataset.tag = tag;
+    container.appendChild(el);
+  });
+}
+
+function renderTagState(){
+  document.querySelectorAll('.tag').forEach(el => {
+    el.classList.toggle('active', el.dataset.tag === activeTag);
+  });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+function render(){
+  const query = document.getElementById('search').value.trim().toLowerCase();
+
+  const filtered = allSnippets.filter(s => {
+    const matchesTag = !activeTag || s.tags.includes(activeTag);
+    const haystack = (s.title + ' ' + s.description + ' ' + s.tags.join(' ')).toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesTag && matchesQuery;
+  });
+
+  document.getElementById('countText').textContent =
+    `${filtered.length} of ${allSnippets.length} snippets`;
+
+  const results = document.getElementById('results');
+  const empty = document.getElementById('empty');
+
+  if(filtered.length === 0){
+    results.innerHTML = '';
+    empty.style.display = allSnippets.length ? 'block' : 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  results.innerHTML = filtered.map(s => `
+    <div class="card">
+      <div class="card-head" onclick="openModal('${escapeHtml(s.id)}')">
+        <div class="card-title-row">
+          <div class="card-title">${escapeHtml(s.title)}</div>
+          <div class="card-meta">
+            <span class="lang-badge">${escapeHtml(s.language)}</span>
+            <span class="chevron"></span>
+          </div>
+        </div>
+        <div class="card-tags-preview">
+          ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+let currentModalCode = '';
+
+function openModal(id){
+  const s = allSnippets.find(x => x.id === id);
+  if(!s) return;
+  currentModalCode = s.code;
+
+  document.getElementById('modalPanel').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${escapeHtml(s.title)}</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-lang">${escapeHtml(s.language)}</div>
+    <div class="modal-desc">${escapeHtml(s.description)}</div>
+    <div class="card-tags">
+      ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+    </div>
+    ${s.prerequisites && s.prerequisites.length ? `
+    <div class="prereqs">
+      <div class="prereqs-label">Prerequisites</div>
+      <ul>${s.prerequisites.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+    </div>` : ''}
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+      <pre><code>${escapeHtml(s.code)}</code></pre>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentModalCode = '';
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeModal();
+});
+
+function copyCode(btn){
+  navigator.clipboard.writeText(currentModalCode).then(() => {
+    const label = btn.querySelector('span');
+    label.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      label.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+
+document.getElementById('search').addEventListener('input', render);
+
+/* --- Typewriter placeholder cycling through real tags, random order --- */
+
+const fallbackWords = [
+  'Intune', 'Citrix VDA', 'Entra ID', 'Graph', 'FSLogix',
+  'RDS', 'NetScaler', 'Windows', 'Conditional Access', 'Autopilot',
+  'XenServer', 'Igel UMS', 'Igel OS', 'Igel ICG', 'NVIDIA'
+];
+
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startTypewriter(words){
+  const input = document.getElementById('search');
+  const prefix = 'find --tag ';
+  let wordIndex = 0;
+  let charIndex = 0;
+  let deleting = false;
+  let paused = false;
+  let timeoutId = null;
+
+  function tick(){
+    if(paused) return;
+
+    const word = words[wordIndex];
+
+    if(!deleting){
+      charIndex++;
+      input.placeholder = prefix + word.slice(0, charIndex);
+      if(charIndex === word.length){
+        timeoutId = setTimeout(tick, 2200); // Pause on full word
+        deleting = true;
+        return;
+      }
+      timeoutId = setTimeout(tick, 65);
+    } else {
+      charIndex--;
+      input.placeholder = prefix + word.slice(0, charIndex);
+      if(charIndex === 0){
+        deleting = false;
+        wordIndex++;
+        if(wordIndex >= words.length){
+          wordIndex = 0;
+          shuffle(words); // re-shuffle after a full pass for continued randomness
+        }
+        timeoutId = setTimeout(tick, 300);
+        return;
+      }
+      timeoutId = setTimeout(tick, 30);
+    }
+  }
+
+  input.placeholder = prefix;
+  timeoutId = setTimeout(tick, 500);
+
+  input.addEventListener('focus', () => {
+    paused = true;
+    clearTimeout(timeoutId);
+    input.placeholder = 'find --tag ...';
+  });
+  input.addEventListener('blur', () => {
+    if(input.value.trim()) return;
+    paused = false;
+    charIndex = 0;
+    deleting = false;
+    tick();
+  });
+}
+
+loadSnippets();
+
+/* --- Theme toggle (dark default, light optional, persisted) --- */
+
+(function initTheme(){
+  const stored = localStorage.getItem('snippet-lib-theme');
+  const preferLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const theme = stored || (preferLight ? 'light' : 'dark');
+  if(theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if(isLight){
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('snippet-lib-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('snippet-lib-theme', 'light');
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
