@@ -1,88 +1,116 @@
 # Snippet Library
 
-A static snippet library. No backend, no build step, no token/PAT required.
+A searchable, self-hosted snippet library for Modern Workplace / EUC
+consulting work — PowerShell (Graph SDK, Intune, Entra ID, Exchange Online,
+SharePoint) plus Citrix, Igel, NVIDIA, and general Windows troubleshooting
+and deployment scripts.
 
-Each snippet is its own Markdown file under `/snippets` in a **public**
-GitHub repo. `index.html` fetches `manifest.json` and every listed `.md`
-file directly from `raw.githubusercontent.com` at runtime — no server-side
-code, no API token, no CORS issues (raw.githubusercontent.com allows
-unauthenticated cross-origin requests for public repos).
+Static site, no backend, no build step, no API token. Snippets live as
+individual Markdown files in this repo and are fetched directly by the
+page at runtime.
 
-This decouples the app from its data: `index.html` can be hosted anywhere
-(GitHub Pages, any static host, or just opened locally) and will always
-show the current content of the repo without needing to be redeployed.
+## Features
 
-## Structure
+- **Live search** with a typewriter-animated placeholder that cycles
+  through the tags actually present in the library
+- **Tag filtering** — click a tag to narrow results, click again to clear
+- **Compact card grid** — each card shows only the title; click to open
+  the full snippet (description, tags, prerequisites, code) in a modal
+- **One-click copy** for code blocks
+- **Light / dark theme toggle**, choice persisted in the browser
+- **No backend** — `index.html` fetches everything straight from this
+  GitHub repo via `raw.githubusercontent.com`, so the page works from
+  anywhere without needing to be redeployed when snippets change
+
+## How it works
+
+`index.html` fetches `snippets/manifest.json` (the list of snippet
+filenames), then fetches and parses each listed `.md` file — all via
+plain `fetch()` calls to `raw.githubusercontent.com`, which allows
+unauthenticated cross-origin requests for public repos. There is no
+server-side code and no dependency on this specific hosting location:
+the page can be opened locally, hosted on GitHub Pages, or copied
+anywhere else, and it will still always show the current content of
+this repo.
+
+## Repository structure
 
 ```
-snippet-lib/
-├── index.html          ← display, search, tag filter, fetches from GitHub
-├── snippets/
-│   ├── manifest.json    ← list of all snippet files
-│   ├── graph-connect-cert.md
-│   ├── intune-noncompliant-devices.md
-│   └── ...
+.
+├── index.html            ← the entire app (search, tags, modal, theme)
+├── README.md
+└── snippets/
+    ├── manifest.json     ← list of all snippet filenames
+    ├── graph-connect-cert.md
+    ├── intune-noncompliant-devices.md
+    └── ...
 ```
 
 ## One-time setup
 
-Open `index.html`, find `GITHUB_CONFIG` near the top of the `<script>`
-block, and set it to your repo:
+This repo must be **public** — `raw.githubusercontent.com` only allows
+token-free access to public repos.
+
+Open `index.html`, locate `GITHUB_CONFIG` near the top of the `<script>`
+block, and point it at this repo:
 
 ```js
 const GITHUB_CONFIG = {
   owner: 'your-github-username',
-  repo: 'snippet-lib',
+  repo: 'modern-workplace-snippets',
   branch: 'main'
 };
 ```
 
-Requires the repo to be **public**. For a private repo, this direct
-`raw.githubusercontent.com` approach doesn't work without a read-only
-token — ask if you want that variant instead.
+Commit and push. That's the only configuration step — everything else
+is content.
 
 ## Snippet format
 
-Each file: YAML frontmatter + description + one code block.
+Each snippet is one Markdown file: YAML frontmatter, a short description,
+and exactly one fenced code block.
 
 ```markdown
 ---
 id: unique-id
-title: "Short title"
+title: "Short, descriptive title"
 language: powershell
 tags: ["Graph", "Troubleshooting"]
 prerequisites: ["Local admin rights", "Firewall: outbound TCP 443"]
 ---
 
-One or two sentences describing what the snippet does.
+One or two sentences describing what the snippet does and when to use it.
 
 \`\`\`powershell
 Get-MgUser -UserId "user@contoso.com"
 \`\`\`
 ```
 
-`prerequisites` is optional — use an empty array (`[]`) or omit the field
-entirely, and no prerequisites box will show on the card.
+| Field           | Required | Notes                                                             |
+|-----------------|----------|--------------------------------------------------------------------|
+| `id`            | yes      | Unique, kebab-case, matches the filename (without `.md`)          |
+| `title`         | yes      | Shown as the card title and modal heading                         |
+| `language`      | no       | Defaults to the fenced code block's language, or `powershell`     |
+| `tags`          | yes      | Array of strings; also feeds the search placeholder rotation      |
+| `prerequisites` | no       | Array of strings; omit or use `[]` to hide the box entirely       |
 
-## Adding a new snippet
+## Adding a snippet
 
-1. Create a new `.md` file under `/snippets` (format as above)
-2. Add the filename to `snippets/manifest.json` (alphabetical order optional)
-3. Commit + push
+1. Create `snippets/<id>.md` following the format above
+2. Add the filename to `snippets/manifest.json`
+3. Commit and push
 
 ```bash
-git add snippets/my-new-snippet.md snippets/manifest.json
+git add snippets/<id>.md snippets/manifest.json
 git commit -m "Snippet: <title>"
 git push
 ```
 
-The next time anyone opens `index.html`, it fetches the updated
-`manifest.json` and picks up the new file — no rebuild, no redeploy.
+No rebuild, no redeploy — the next page load picks it up automatically.
 
-## Auto-regenerating manifest.json
+### Regenerating manifest.json
 
-Optional, if maintaining it manually gets tedious — a one-liner that
-rebuilds `manifest.json` from the actual directory contents:
+If keeping the manifest in sync by hand gets tedious:
 
 ```bash
 python3 -c "
@@ -92,37 +120,37 @@ json.dump(files, open('snippets/manifest.json', 'w'), indent=2)
 "
 ```
 
-## Repo setup (GitHub)
+## Deployment
 
-```bash
-git init
-git add .
-git commit -m "init"
-git remote add origin <repo-url>
-git branch -M main
-git push -u origin main
-```
+Works as-is with any static hosting, including none at all (open the
+file locally). For a shareable URL:
 
-Repo must be **public** for `index.html` to load snippets without a token
-(Settings → General → Danger Zone → Change visibility, if it isn't already).
+**GitHub Pages** — repo settings → Pages → source: branch `main`,
+folder `/ (root)` → save. Available at
+`https://<owner>.github.io/<repo>/`.
 
-## Deployment (GitHub Pages)
+No code changes needed for any hosting choice — `index.html` always
+pulls snippet data from this repo via an absolute URL, independent of
+where the page itself is served from.
 
-Repo settings → Pages → Source: branch `main`, folder `/ (root)` → Save.
-URL: `https://<owner>.github.io/<repo>/`
+## Local testing
 
-No code changes needed — `index.html` fetches snippets via an absolute
-`raw.githubusercontent.com` URL, so it works the same whether opened
-locally, via Pages, or from any other static host.
-
-## Testing locally
-
-Since data now comes from `raw.githubusercontent.com` rather than local
-files, `index.html` can usually be opened directly (double-click, `file://`)
-without a local server — as long as the repo is pushed and public. If your
-browser still blocks it, fall back to:
+Since snippet data comes from `raw.githubusercontent.com` rather than
+relative local paths, `index.html` can usually be opened directly
+(double-click, `file://`) once the repo is pushed and public. If a
+browser blocks that, fall back to a local server:
 
 ```bash
 python3 -m http.server 8000
 ```
 Then open `http://localhost:8000`.
+
+## Design notes
+
+- No custom edit UI, no write access from the browser — editing stays
+  Git-native (clone, edit, commit, push), which keeps history, diffs,
+  and rollback for free and avoids putting any credentials in client-side
+  code.
+- One file per snippet instead of one large JSON — smaller, readable
+  diffs per change, and no merge conflicts when multiple snippets are
+  edited in parallel.
