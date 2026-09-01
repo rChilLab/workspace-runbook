@@ -524,7 +524,6 @@
   <header>
     <div>
       <div class="brand">PS&gt; Modern Workplace</div>
-      <h1>Snippet Library</h1>
     </div>
     <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -552,8 +551,6 @@
   <div class="empty" id="empty" style="display:none;">
     No matches. Try a different search or tag filter.
   </div>
-
-  <footer id="footerText">Each card is a Markdown file under /snippets · edited directly in Git</footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -877,10 +874,6 @@ function setView(view, btn){
   document.getElementById('search').value = '';
   document.getElementById('promptLabel').textContent =
     view === 'scripts' ? 'PS C:\\Scripts>' : 'PS C:\\Snippets>';
-  document.getElementById('footerText').textContent =
-    view === 'scripts'
-      ? 'Each card is a folder under /scripts (meta.json + script.ps1) · edited directly in Git'
-      : 'Each card is a Markdown file under /snippets · edited directly in Git';
   renderTags();
   render();
 }
@@ -1177,4 +1170,4 @@ loadSnippets();
 
 </script>
 </body>
-</html>
+</html>F
