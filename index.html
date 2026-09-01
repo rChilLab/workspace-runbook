@@ -17,6 +17,8 @@
     --accent: #5391FE;
     --accent-dim: #2A4A8C;
     --amber: #F5A623;
+    --green: #4ADE80;
+    --green-dim: #1C4A31;
     --code-bg: #0D1017;
     --code-text: #C8D0E0;
     --mono: 'JetBrains Mono', monospace;
@@ -32,6 +34,8 @@
     --accent: #2E63D6;
     --accent-dim: #B7CBF5;
     --amber: #B7791F;
+    --green: #1A8449;
+    --green-dim: #DCF3E6;
     --code-bg: #F0F2F6;
     --code-text: #24303F;
   }
@@ -125,6 +129,46 @@
     margin-left: 2px;
   }
   @keyframes blink{ 50%{ opacity: 0; } }
+
+  /* --- Snippets / Scripts tab switch --- */
+  .segmented{
+    display: inline-flex;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin: 24px 0 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .segmented button{
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .segmented button .count-pill{
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--border);
+    color: var(--text-muted);
+  }
+  .segmented button.active{
+    background: var(--panel-hover);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .segmented button.active .count-pill{
+    background: var(--accent-dim);
+    color: var(--text);
+  }
 
   .tags{
     display:flex;
@@ -265,6 +309,53 @@
     transform: rotate(-45deg);
   }
 
+  /* --- Script card --- */
+  .script-card{ background: var(--bg); padding: 16px 18px; display:flex; flex-direction:column; gap: 10px; }
+  .script-top{ display:flex; justify-content: space-between; align-items:flex-start; gap: 10px; cursor: pointer; }
+  .script-title{ font-family: var(--mono); font-size: 14.5px; font-weight: 600; line-height:1.3; }
+  .version-badge{
+    font-family: var(--mono); font-size: 10px; color: var(--green);
+    background: var(--green-dim); border: 1px solid rgba(74,222,128,0.25);
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+  }
+  .script-desc{ font-size: 12.5px; color: var(--text-muted); line-height: 1.5; cursor: pointer; }
+  .script-tags{ display:flex; gap:10px; flex-wrap: wrap; }
+  .script-meta-row{
+    display:flex; justify-content: space-between; align-items:center;
+    padding-top: 10px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+  }
+  .script-meta-row .params-count::before{ content: "⚙ "; opacity: .6; }
+  .script-actions{ display:flex; gap: 8px; }
+  .btn-ghost, .btn-solid{
+    font-family: var(--mono); font-size: 11.5px;
+    padding: 6px 12px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .btn-ghost{ background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover{ color: var(--text); border-color: var(--accent-dim); }
+  .btn-solid{ background: var(--accent-dim); border-color: var(--accent-dim); color: var(--text); text-decoration:none; }
+
+  /* --- Script modal extras --- */
+  table.params{
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+    font-family: var(--mono); margin: 4px 0 20px;
+  }
+  table.params th{
+    text-align:left; color: var(--text-muted); font-weight:500;
+    padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .03em;
+  }
+  table.params td{ padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.params td.pname{ color: var(--accent); white-space: nowrap; }
+  table.params td.preq{ color: var(--text-muted); }
+  .changelog-label{ font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 8px; }
+  .changelog{ margin-bottom: 4px; }
+  .changelog li{ font-size: 12.5px; color: var(--text-muted); list-style: none; padding-left: 14px; position: relative; margin-bottom: 4px; }
+  .changelog li::before{ content: "–"; position: absolute; left:0; opacity:.5; }
+  .changelog .v{ color: var(--text); font-family: var(--mono); }
+  .modal-actions{ display:flex; gap:8px; margin-top: 14px; }
+
   /* --- Modal --- */
   .modal-overlay{
     display: none;
@@ -399,8 +490,13 @@
     </button>
   </header>
 
+  <div class="segmented" id="viewSwitch">
+    <button class="active" onclick="setView('snippets', this)">Snippets <span class="count-pill" id="tabCountSnippets">0</span></button>
+    <button onclick="setView('scripts', this)">Scripts <span class="count-pill" id="tabCountScripts">0</span></button>
+  </div>
+
   <div class="prompt">
-    <span class="prompt-label">PS C:\Snippets&gt;</span>
+    <span class="prompt-label" id="promptLabel">PS C:\Snippets&gt;</span>
     <input id="search" type="text" placeholder="find --tag" autocomplete="off">
     <span class="cursor"></span>
   </div>
@@ -415,7 +511,7 @@
     No matches. Try a different search or tag filter.
   </div>
 
-  <footer>Each card is a Markdown file under /snippets · edited directly in Git</footer>
+  <footer id="footerText">Each card is a Markdown file under /snippets · edited directly in Git</footer>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -425,6 +521,9 @@
 <script>
 let allSnippets = [];
 let activeTag = null;
+let allScripts = [];
+let activeScriptTag = null;
+let currentView = 'snippets';
 
 /* --- GitHub source config ---
    Public repo required for this to work without a token (raw.githubusercontent.com
@@ -437,6 +536,8 @@ const GITHUB_CONFIG = {
 };
 const SNIPPETS_BASE =
   `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/snippets`;
+const SCRIPTS_BASE =
+  `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/scripts`;
 
 /* --- Loading & parsing the Markdown files --- */
 
@@ -461,9 +562,11 @@ async function loadSnippets(){
 
     allSnippets = files.map((text, i) => parseSnippet(text, filenames[i])).filter(Boolean);
     statusEl.textContent = '';
+    document.getElementById('tabCountSnippets').textContent = allSnippets.length;
     renderTags();
     render();
     startTypewriter(collectTags());
+    loadScripts();
   }catch(e){
     statusEl.textContent = 'Failed to load';
     statusEl.classList.add('error');
@@ -472,6 +575,45 @@ async function loadSnippets(){
        Check GITHUB_CONFIG (owner/repo/branch) at the top of the script, and make sure the repo is public.</div>`;
     startTypewriter(shuffle([...fallbackWords]));
   }
+}
+
+/* --- Scripts: each entry is a folder scripts/<id>/ with meta.json + script.ps1 ---
+   manifest.json here lists folder names (ids), not filenames. */
+async function loadScripts(){
+  try{
+    const manifestRes = await fetch(`${SCRIPTS_BASE}/manifest.json`);
+    if(!manifestRes.ok) throw new Error('scripts/manifest.json not found');
+    const ids = await manifestRes.json();
+
+    const scripts = await Promise.all(ids.map(async id => {
+      const [metaRes, codeRes] = await Promise.all([
+        fetch(`${SCRIPTS_BASE}/${id}/meta.json`),
+        fetch(`${SCRIPTS_BASE}/${id}/script.ps1`)
+      ]);
+      if(!metaRes.ok) throw new Error(`${id}/meta.json not found`);
+      const meta = await metaRes.json();
+      const code = codeRes.ok ? await codeRes.text() : '';
+      return {
+        id: meta.id || id,
+        title: meta.title || id,
+        version: meta.version || '',
+        tags: meta.tags || [],
+        description: meta.description || '',
+        prerequisites: meta.prerequisites || [],
+        parameters: meta.parameters || [],
+        changelog: meta.changelog || [],
+        code,
+        downloadUrl: `${SCRIPTS_BASE}/${id}/script.ps1`
+      };
+    }));
+
+    allScripts = scripts;
+  }catch(e){
+    allScripts = [];
+    console.warn('Scripts could not be loaded:', e.message);
+  }
+  document.getElementById('tabCountScripts').textContent = allScripts.length;
+  if(currentView === 'scripts'){ renderTags(); render(); }
 }
 
 function collectTags(){
@@ -535,8 +677,9 @@ function parseFrontmatter(yamlBlock){
 /* --- Rendering (unchanged from the previous version) --- */
 
 function renderTags(){
+  const source = currentView === 'scripts' ? allScripts : allSnippets;
   const tagSet = new Set();
-  allSnippets.forEach(s => s.tags.forEach(t => tagSet.add(t)));
+  source.forEach(s => s.tags.forEach(t => tagSet.add(t)));
   const container = document.getElementById('tags');
   container.innerHTML = '';
   [...tagSet].sort().forEach(tag => {
@@ -544,19 +687,40 @@ function renderTags(){
     el.className = 'tag';
     el.textContent = tag;
     el.onclick = () => {
-      activeTag = activeTag === tag ? null : tag;
+      if(currentView === 'scripts'){
+        activeScriptTag = activeScriptTag === tag ? null : tag;
+      } else {
+        activeTag = activeTag === tag ? null : tag;
+      }
       renderTagState();
       render();
     };
     el.dataset.tag = tag;
     container.appendChild(el);
   });
+  renderTagState();
 }
 
 function renderTagState(){
+  const active = currentView === 'scripts' ? activeScriptTag : activeTag;
   document.querySelectorAll('.tag').forEach(el => {
-    el.classList.toggle('active', el.dataset.tag === activeTag);
+    el.classList.toggle('active', el.dataset.tag === active);
   });
+}
+
+function setView(view, btn){
+  currentView = view;
+  document.querySelectorAll('#viewSwitch button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('search').value = '';
+  document.getElementById('promptLabel').textContent =
+    view === 'scripts' ? 'PS C:\\Scripts>' : 'PS C:\\Snippets>';
+  document.getElementById('footerText').textContent =
+    view === 'scripts'
+      ? 'Each card is a folder under /scripts (meta.json + script.ps1) · edited directly in Git'
+      : 'Each card is a Markdown file under /snippets · edited directly in Git';
+  renderTags();
+  render();
 }
 
 function escapeHtml(str){
@@ -566,6 +730,11 @@ function escapeHtml(str){
 }
 
 function render(){
+  if(currentView === 'scripts') return renderScripts();
+  return renderSnippets();
+}
+
+function renderSnippets(){
   const query = document.getElementById('search').value.trim().toLowerCase();
 
   const filtered = allSnippets.filter(s => {
@@ -584,6 +753,7 @@ function render(){
   if(filtered.length === 0){
     results.innerHTML = '';
     empty.style.display = allSnippets.length ? 'block' : 'none';
+    empty.textContent = 'No matches. Try a different search or tag filter.';
     return;
   }
   empty.style.display = 'none';
@@ -600,6 +770,53 @@ function render(){
         </div>
         <div class="card-tags-preview">
           ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderScripts(){
+  const query = document.getElementById('search').value.trim().toLowerCase();
+
+  const filtered = allScripts.filter(s => {
+    const matchesTag = !activeScriptTag || s.tags.includes(activeScriptTag);
+    const haystack = (s.title + ' ' + s.description + ' ' + s.tags.join(' ')).toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesTag && matchesQuery;
+  });
+
+  document.getElementById('countText').textContent =
+    `${filtered.length} of ${allScripts.length} scripts`;
+
+  const results = document.getElementById('results');
+  const empty = document.getElementById('empty');
+
+  if(filtered.length === 0){
+    results.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = allScripts.length
+      ? 'No matches. Try a different search or tag filter.'
+      : 'No scripts yet. Add a folder under /scripts with meta.json + script.ps1.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  results.innerHTML = filtered.map(s => `
+    <div class="script-card">
+      <div class="script-top" onclick="openScriptModal('${escapeHtml(s.id)}')">
+        <div class="script-title">${escapeHtml(s.title)}</div>
+        ${s.version ? `<span class="version-badge">v${escapeHtml(s.version)}</span>` : ''}
+      </div>
+      <div class="script-desc" onclick="openScriptModal('${escapeHtml(s.id)}')">${escapeHtml(s.description)}</div>
+      <div class="script-tags">
+        ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+      </div>
+      <div class="script-meta-row">
+        <span class="params-count">${s.parameters.length} Parameter</span>
+        <div class="script-actions">
+          <button class="btn-ghost" onclick="openScriptModal('${escapeHtml(s.id)}')">Details</button>
+          <a class="btn-solid" href="${s.downloadUrl}" download="${escapeHtml(s.id)}.ps1" onclick="event.stopPropagation()">↓ Download</a>
         </div>
       </div>
     </div>
@@ -636,6 +853,65 @@ function openModal(id){
         <span>Copy</span>
       </button>
       <pre><code>${escapeHtml(s.code)}</code></pre>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openScriptModal(id){
+  const s = allScripts.find(x => x.id === id);
+  if(!s) return;
+  currentModalCode = s.code;
+
+  const paramsTable = s.parameters.length ? `
+    <table class="params">
+      <thead><tr><th>Parameter</th><th>Typ</th><th>Pflicht</th><th>Beschreibung</th></tr></thead>
+      <tbody>
+        ${s.parameters.map(p => `
+          <tr>
+            <td class="pname">${escapeHtml(p.name || '')}</td>
+            <td>${escapeHtml(p.type || '')}</td>
+            <td class="preq">${p.required ? 'ja' : 'nein'}</td>
+            <td>${escapeHtml(p.description || '')}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>` : '';
+
+  const changelog = s.changelog.length ? `
+    <div class="changelog-label">Changelog</div>
+    <ul class="changelog">
+      ${s.changelog.map(c => `<li><span class="v">v${escapeHtml(c.version || '')}</span> — ${escapeHtml(c.notes || '')}</li>`).join('')}
+    </ul>` : '';
+
+  document.getElementById('modalPanel').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${escapeHtml(s.title)}</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-lang">${s.version ? 'v' + escapeHtml(s.version) : 'powershell'}</div>
+    <div class="modal-desc">${escapeHtml(s.description)}</div>
+    <div class="card-tags">
+      ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+    </div>
+    ${s.prerequisites && s.prerequisites.length ? `
+    <div class="prereqs">
+      <div class="prereqs-label">Prerequisites</div>
+      <ul>${s.prerequisites.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+    </div>` : ''}
+    ${paramsTable}
+    ${changelog}
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+      <pre><code>${escapeHtml(s.code)}</code></pre>
+    </div>
+    <div class="modal-actions">
+      <a class="btn-solid" href="${s.downloadUrl}" download="${escapeHtml(s.id)}.ps1">↓ Download script.ps1</a>
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('open');
