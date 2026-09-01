@@ -380,13 +380,17 @@
   .md-body ul.md-ul{ margin: 0 0 14px; padding-left: 18px; }
   .md-body ul.md-ul li{ margin-bottom: 4px; }
   .md-body a{ color: var(--accent); }
+  .md-table-wrap{ overflow-x: auto; margin: 4px 0 16px; }
   .md-body table.md-table{
-    width: 100%; border-collapse: collapse; font-size: 12px; margin: 4px 0 16px;
+    width: 100%; border-collapse: collapse; font-size: 12px; margin: 0;
   }
+  .md-body table.md-table th:first-child,
+  .md-body table.md-table td:first-child{ white-space: nowrap; }
   .md-body table.md-table th{
     text-align: left; color: var(--text-muted); font-weight: 500;
     padding: 6px 8px; border-bottom: 1px solid var(--border);
     font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em;
+    white-space: nowrap;
   }
   .md-body table.md-table td{
     padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top;
@@ -411,7 +415,7 @@
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
-    max-width: 680px;
+    max-width: 760px;
     width: 100%;
     padding: 26px 26px 28px;
   }
@@ -721,8 +725,8 @@ function mdToHtml(md){
       i += 2;
       const rows = [];
       while(i < lines.length && /^\|/.test(lines[i])){ rows.push(cells(lines[i])); i++; }
-      html += '<table class="md-table"><thead><tr>' + head.map(c => `<th>${inlineMd(c)}</th>`).join('') + '</tr></thead><tbody>' +
-        rows.map(r => '<tr>' + r.map(c => `<td>${inlineMd(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+      html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>' + head.map(c => `<th>${inlineMd(c)}</th>`).join('') + '</tr></thead><tbody>' +
+        rows.map(r => '<tr>' + r.map(c => `<td>${inlineMd(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
       continue;
     }
 
