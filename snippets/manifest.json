@@ -42,5 +42,5 @@
   "win-service-status-multi.md",
   "xenserver-host-status.md",
   "xenserver-vm-resource-usage.md",
-  "powershell-get-service.md"
+  "powershell-service.md"
 ]
