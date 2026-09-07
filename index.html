@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snippet-Lib // Modern Workplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0E14;
+    --panel: #12161F;
+    --panel-hover: #161B26;
+    --border: #232938;
+    --text: #E6E9EF;
+    --text-muted: #8B93A7;
+    --accent: #5391FE;
+    --accent-dim: #2A4A8C;
+    --amber: #F5A623;
+    --green: #4ADE80;
+    --green-dim: #1C4A31;
+    --code-bg: #0D1017;
+    --code-text: #C8D0E0;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  :root[data-theme="light"]{
+    --bg: #F7F8FA;
+    --panel: #FFFFFF;
+    --panel-hover: #EEF1F5;
+    --border: #E1E4EA;
+    --text: #1A1F29;
+    --text-muted: #6B7280;
+    --accent: #2E63D6;
+    --accent-dim: #B7CBF5;
+    --amber: #B7791F;
+    --green: #1A8449;
+    --green-dim: #DCF3E6;
+    --code-bg: #F0F2F6;
+    --code-text: #24303F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height:100vh;
+    padding: 32px 20px 80px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; }
+
+  header{
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .brand{
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1{
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .theme-toggle{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color .12s ease, border-color .12s ease;
+  }
+  .theme-toggle:hover{ color: var(--text); border-color: var(--accent-dim); }
+  .theme-toggle svg{ width: 16px; height: 16px; }
+  .theme-toggle .icon-moon{ display: block; }
+  .theme-toggle .icon-sun{ display: none; }
+  :root[data-theme="light"] .theme-toggle .icon-moon{ display: none; }
+  :root[data-theme="light"] .theme-toggle .icon-sun{ display: block; }
+
+  /* Prompt-style search — das Signature-Element */
+  .prompt{
+    display:flex;
+    align-items:center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin: 24px 0 16px;
+    font-family: var(--mono);
+    transition: border-color .15s ease;
+  }
+  .prompt:focus-within{ border-color: var(--accent-dim); }
+  .prompt-label{
+    color: var(--accent);
+    font-size: 14px;
+    white-space: nowrap;
+    margin-right: 10px;
+    user-select: none;
+  }
+  .prompt input{
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .prompt input::placeholder{ color: var(--text-muted); }
+  .cursor{
+    width: 7px; height: 15px;
+    background: var(--accent);
+    animation: blink 1.1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  /* --- Snippets / Scripts tab switch --- */
+  .segmented{
+    display: inline-flex;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin: 24px 0 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .segmented button{
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .segmented button .count-pill{
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--border);
+    color: var(--text-muted);
+  }
+  .segmented button.active{
+    background: var(--panel-hover);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .segmented button.active .count-pill{
+    background: var(--accent-dim);
+    color: var(--text);
+  }
+
+  .tags{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .tag{
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    transition: all .12s ease;
+  }
+  .tag:hover{ color: var(--text); }
+  .tag.active{
+    background: var(--panel-hover);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .count{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+  .count .status{ color: var(--text-muted); }
+  .count .status.error{ color: var(--amber); }
+
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card{
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head{
+    padding: 16px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease;
+  }
+  .card-head:hover{ background: var(--panel-hover); }
+  .card-title-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title{
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .card-meta{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .lang-badge{
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .card-tags-preview{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .card-tags-preview .card-tag{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+  .card-tags-preview .card-tag::before{ content: "#"; opacity: 0.5; }
+
+  .prereqs{
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .prereqs-label{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .prereqs ul{
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .prereqs li{
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding-left: 12px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .prereqs li::before{
+    content: "–";
+    position: absolute;
+    left: 0;
+    opacity: 0.5;
+  }
+
+  .chevron{
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--text-muted);
+    border-bottom: 1.5px solid var(--text-muted);
+    transform: rotate(-45deg);
+  }
+
+  footer{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 22px 18px 10px;
+  }
+  kbd{
+    font-family: var(--mono); font-size: 10.5px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-bottom-width: 2px; border-radius: 4px;
+    padding: 1px 6px; color: var(--text);
+    cursor: pointer;
+  }
+  kbd:hover{ border-color: var(--accent-dim); color: var(--accent); }
+  kbd:active{ transform: translateY(1px); border-bottom-width: 1px; }
+
+  /* --- Script card --- */
+  .script-card{ background: var(--bg); padding: 16px 18px; display:flex; flex-direction:column; gap: 10px; }
+  .script-top{ display:flex; justify-content: space-between; align-items:flex-start; gap: 10px; cursor: pointer; }
+  .script-title{ font-family: var(--mono); font-size: 14.5px; font-weight: 600; line-height:1.3; }
+  .version-badge{
+    font-family: var(--mono); font-size: 10px; color: var(--green);
+    background: var(--green-dim); border: 1px solid rgba(74,222,128,0.25);
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+  }
+  .script-desc{ font-size: 12.5px; color: var(--text-muted); line-height: 1.5; cursor: pointer; }
+  .script-tags{ display:flex; gap:10px; flex-wrap: wrap; }
+  .script-meta-row{
+    display:flex; justify-content: space-between; align-items:center;
+    padding-top: 10px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+  }
+  .script-meta-row .params-count::before{ content: "⚙ "; opacity: .6; }
+  .script-actions{ display:flex; gap: 8px; }
+  .btn-ghost, .btn-solid{
+    font-family: var(--mono); font-size: 11.5px;
+    padding: 6px 12px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .btn-ghost{ background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover{ color: var(--text); border-color: var(--accent-dim); }
+  .btn-solid{ background: var(--accent-dim); border-color: var(--accent-dim); color: var(--text); text-decoration:none; }
+
+  /* --- Script modal extras --- */
+  table.params{
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+    font-family: var(--mono); margin: 4px 0 20px;
+  }
+  table.params th{
+    text-align:left; color: var(--text-muted); font-weight:500;
+    padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .03em;
+  }
+  table.params td{ padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.params td.pname{ color: var(--accent); white-space: nowrap; }
+  table.params td.preq{ color: var(--text-muted); }
+  .changelog-label{ font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; margin: 0 0 8px; }
+  .changelog{ margin-bottom: 4px; }
+  .changelog li{ font-size: 12.5px; color: var(--text-muted); list-style: none; padding-left: 14px; position: relative; margin-bottom: 4px; }
+  .changelog li::before{ content: "–"; position: absolute; left:0; opacity:.5; }
+  .changelog .v{ color: var(--text); font-family: var(--mono); }
+  .modal-actions{ display:flex; gap:8px; margin-top: 14px; }
+
+  /* --- Rendered README.md inside the script modal --- */
+  .md-body{ font-size: 13.5px; line-height: 1.65; color: var(--text-muted); margin: 14px 0 10px; }
+  .md-body h1, .md-body h2, .md-body h3{
+    font-family: var(--mono); color: var(--text); font-weight: 600;
+    margin: 20px 0 8px;
+  }
+  .md-body h1:first-child, .md-body h2:first-child, .md-body h3:first-child{ margin-top: 0; }
+  .md-body h1{ font-size: 16px; }
+  .md-body h2{ font-size: 13.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); }
+  .md-body h3{ font-size: 13px; }
+  .md-body p{ margin: 0 0 12px; }
+  .md-body strong{ color: var(--text); font-weight: 600; }
+  .md-body code{
+    font-family: var(--mono); font-size: 12px; background: var(--code-bg);
+    padding: 1px 5px; border-radius: 3px; color: var(--code-text);
+  }
+  .md-body pre{
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; overflow-x: auto; margin: 0 0 14px;
+  }
+  .md-body pre code{ background: none; padding: 0; font-size: 12.5px; }
+  .md-body ul.md-ul{ margin: 0 0 14px; padding-left: 18px; }
+  .md-body ul.md-ul li{ margin-bottom: 4px; }
+  .md-body a{ color: var(--accent); }
+  .md-table-wrap{ overflow-x: auto; margin: 4px 0 16px; }
+  .md-body table.md-table{
+    width: 100%; border-collapse: collapse; font-size: 12px; margin: 0;
+  }
+  .md-body table.md-table th:first-child,
+  .md-body table.md-table td:first-child{ white-space: nowrap; }
+  .md-body table.md-table th{
+    text-align: left; color: var(--text-muted); font-weight: 500;
+    padding: 6px 8px; border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em;
+    white-space: nowrap;
+  }
+  .md-body table.md-table td{
+    padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .md-body table.md-table code{ font-size: 11px; }
+  .md-empty{ color: var(--text-muted); font-style: italic; }
+
+  /* --- Modal --- */
+  .modal-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8vh 20px;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .modal-overlay.open{ display: flex; }
+  .modal-panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-width: 760px;
+    width: 100%;
+    padding: 26px 26px 28px;
+  }
+  .modal-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .modal-title{
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .modal-close{
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .modal-close:hover{ color: var(--text); background: var(--panel-hover); }
+  .modal-close svg{ width: 16px; height: 16px; }
+  .modal-lang{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 16px;
+  }
+  .modal-desc{
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .card-tags{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 4px; }
+  .card-tag{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .card-tag::before{ content: "#"; opacity: 0.5; }
+
+  .code-block{
+    position: relative;
+    background: var(--code-bg);
+    margin-top: 14px;
+    border-radius: 6px;
+  }
+  .code-block pre{
+    padding: 16px 18px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--code-text);
+  }
+  .copy-btn{
+    position: absolute;
+    top: 10px; right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: color .12s ease;
+  }
+  .copy-btn svg{ width: 12px; height: 12px; }
+  .copy-btn:hover{ color: var(--text); }
+  .copy-btn.copied{ color: var(--accent); }
+
+  .empty{
+    text-align:center;
+    padding: 70px 20px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    grid-column: 1 / -1;
+  }
+
+  footer{
+    margin-top: 40px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">PS&gt; Modern Workplace</div>
+      <h1>Runbook</h1>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    </button>
+  </header>
+
+  <div class="segmented" id="viewSwitch">
+    <button class="active" onclick="setView('snippets', this)">Snippets <span class="count-pill" id="tabCountSnippets">0</span></button>
+    <button onclick="setView('scripts', this)">Scripts <span class="count-pill" id="tabCountScripts">0</span></button>
+  </div>
+
+  <div class="prompt">
+    <span class="prompt-label" id="promptLabel">PS C:\Snippets&gt;</span>
+    <input id="search" type="search" placeholder="find --tag" autocomplete="off">
+    <span class="cursor"></span>
+  </div>
+
+  <div class="tags" id="tags"></div>
+  <div class="count">
+    <span id="countText"></span>
+    <span class="status" id="status"></span>
+  </div>
+  <div id="results" class="grid"></div>
+  <div class="empty" id="empty" style="display:none;">
+    No matches. Try a different search or tag filter.
+  </div>
+
+  <footer id="footerText">
+    Press <kbd id="clearSearchBtn" role="button" tabindex="0">Esc</kbd> to clear search
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-panel" id="modalPanel" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+let allSnippets = [];
+let activeTag = null;
+let allScripts = [];
+let activeScriptTag = null;
+let currentView = 'snippets';
+
+/* --- Content source: Cloudflare Worker proxy ---
+   The client never talks to GitHub directly — it only knows the proxy
+   domain. Owner/repo/branch live server-side in the Worker's environment
+   variables, not here. */
+const PROXY_BASE = 'https://api.DEINE-DOMAIN.tld';
+const LIST_BASE = `${PROXY_BASE}/list`;
+const SNIPPETS_BASE = `${PROXY_BASE}/raw/snippets`;
+const SCRIPTS_BASE = `${PROXY_BASE}/raw/scripts`;
+
+/* Lists a directory's entries via the proxy's /list endpoint.
+   filterType: 'file' or 'dir'. Throws on error (proxy down, path missing, etc). */
+async function listRepoDir(path, filterType){
+  const res = await fetch(`${LIST_BASE}/${path}`);
+  if(!res.ok){
+    if(res.status === 404) throw new Error(`${path}/ not found`);
+    throw new Error(`Proxy error ${res.status}`);
+  }
+  const entries = await res.json();
+  return entries.filter(e => e.type === filterType);
+}
+
+/* --- Loading & parsing the Markdown files --- */
+
+async function loadSnippets(){
+  const statusEl = document.getElementById('status');
+  try{
+    statusEl.textContent = 'Loading snippet directory …';
+    const entries = await listRepoDir('snippets', 'file');
+    const filenames = entries.map(e => e.name).filter(n => n.endsWith('.md'));
+
+    statusEl.textContent = `Loading ${filenames.length} snippets from GitHub …`;
+
+    const results = await Promise.allSettled(
+      filenames.map(name =>
+        fetch(`${SNIPPETS_BASE}/${name}`).then(r => {
+          if(!r.ok) throw new Error(`${name} not found`);
+          return r.text();
+        })
+      )
+    );
+
+    const failed = [];
+    allSnippets = results
+      .map((r, i) => {
+        if(r.status === 'fulfilled') return parseSnippet(r.value, filenames[i]);
+        failed.push(filenames[i]);
+        return null;
+      })
+      .filter(Boolean);
+
+    if(failed.length) console.warn('Snippets failed to load:', failed);
+
+    statusEl.textContent = '';
+    document.getElementById('tabCountSnippets').textContent = allSnippets.length;
+    renderTags();
+    render();
+    startTypewriter(collectTags());
+    loadScripts();
+  }catch(e){
+    statusEl.textContent = 'Failed to load';
+    statusEl.classList.add('error');
+    document.getElementById('results').innerHTML =
+      `<div class="empty">Could not load snippets (${escapeHtml(e.message)}).<br>
+       Check that PROXY_BASE at the top of the script points to a reachable Worker.</div>`;
+    startTypewriter(shuffle([...fallbackWords]));
+  }
+}
+
+/* --- Scripts: each entry is a folder scripts/<id>/ with meta.json + script.ps1 ---
+   manifest.json here lists folder names (ids), not filenames. */
+async function loadScripts(){
+  try{
+    const entries = await listRepoDir('scripts', 'dir');
+    const ids = entries.map(e => e.name);
+
+    const results = await Promise.allSettled(ids.map(async id => {
+      const [metaRes, codeRes, readmeRes] = await Promise.all([
+        fetch(`${SCRIPTS_BASE}/${id}/meta.json`),
+        fetch(`${SCRIPTS_BASE}/${id}/script.ps1`),
+        fetch(`${SCRIPTS_BASE}/${id}/README.md`)
+      ]);
+      if(!metaRes.ok) throw new Error(`${id}/meta.json not found`);
+      const meta = await metaRes.json();
+      const code = codeRes.ok ? await codeRes.text() : '';
+      const readme = readmeRes.ok ? await readmeRes.text() : '';
+      return {
+        id: meta.id || id,
+        title: meta.title || id,
+        version: meta.version || '',
+        tags: meta.tags || [],
+        readme,
+        excerpt: mdExcerpt(readme),
+        code,
+        downloadUrl: `${SCRIPTS_BASE}/${id}/script.ps1`
+      };
+    }));
+
+    const failed = [];
+    allScripts = results
+      .map((r, i) => {
+        if(r.status === 'fulfilled') return r.value;
+        failed.push(ids[i]);
+        return null;
+      })
+      .filter(Boolean);
+
+    if(failed.length) console.warn('Scripts failed to load:', failed);
+  }catch(e){
+    allScripts = [];
+    console.warn('Scripts could not be loaded:', e.message);
+  }
+  document.getElementById('tabCountScripts').textContent = allScripts.length;
+  if(currentView === 'scripts'){ renderTags(); render(); }
+}
+
+/* --- Minimal Markdown renderer for README.md (headers, bold/italic/code,
+   fenced code blocks, lists, GFM tables, links, paragraphs). No external deps. --- */
+function mdToHtml(md){
+  if(!md) return '';
+  const lines = md.replace(/\r\n/g, '\n').split('\n');
+  let html = '';
+  let i = 0;
+
+  while(i < lines.length){
+    const line = lines[i];
+
+    if(/^```/.test(line)){
+      const code = [];
+      i++;
+      while(i < lines.length && !/^```/.test(lines[i])){ code.push(lines[i]); i++; }
+      i++;
+      html += `<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`;
+      continue;
+    }
+
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){
+      const level = h[1].length;
+      html += `<h${level} class="md-h${level}">${inlineMd(h[2])}</h${level}>`;
+      i++;
+      continue;
+    }
+
+    if(/^\|/.test(line) && lines[i+1] && /^\|?\s*-+\s*(\|\s*-+\s*)*\|?$/.test(lines[i+1])){
+      const cells = l => l.split('|').map(c => c.trim()).filter((c, idx, arr) => !(idx === 0 && c === '') && !(idx === arr.length - 1 && c === ''));
+      const head = cells(line);
+      i += 2;
+      const rows = [];
+      while(i < lines.length && /^\|/.test(lines[i])){ rows.push(cells(lines[i])); i++; }
+      html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>' + head.map(c => `<th>${inlineMd(c)}</th>`).join('') + '</tr></thead><tbody>' +
+        rows.map(r => '<tr>' + r.map(c => `<td>${inlineMd(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+      continue;
+    }
+
+    if(/^[-*]\s+/.test(line)){
+      const items = [];
+      while(i < lines.length && /^[-*]\s+/.test(lines[i])){ items.push(lines[i].replace(/^[-*]\s+/, '')); i++; }
+      html += '<ul class="md-ul">' + items.map(it => `<li>${inlineMd(it)}</li>`).join('') + '</ul>';
+      continue;
+    }
+
+    if(line.trim() === ''){ i++; continue; }
+
+    const para = [line];
+    i++;
+    while(i < lines.length && lines[i].trim() !== '' && !/^#{1,6}\s+/.test(lines[i]) && !/^```/.test(lines[i]) && !/^[-*]\s+/.test(lines[i]) && !/^\|/.test(lines[i])){
+      para.push(lines[i]);
+      i++;
+    }
+    html += `<p>${inlineMd(para.join(' '))}</p>`;
+  }
+  return html;
+}
+
+function inlineMd(text){
+  let t = escapeHtml(text);
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+
+/* Short plain-text excerpt for the card preview: first paragraph after
+   an optional leading H1, markdown syntax stripped, capped in length. */
+function mdExcerpt(md, maxLen = 150){
+  if(!md) return '';
+  const lines = md.replace(/\r\n/g, '\n').split('\n');
+  let idx = 0;
+  while(idx < lines.length && lines[idx].trim() === '') idx++;
+  if(/^#\s+/.test(lines[idx] || '')) idx++;
+  while(idx < lines.length && lines[idx].trim() === '') idx++;
+  const para = [];
+  while(idx < lines.length && lines[idx].trim() !== '' && !/^#{1,6}\s+/.test(lines[idx])){
+    para.push(lines[idx]);
+    idx++;
+  }
+  let text = para.join(' ').replace(/[*`_#]/g, '').trim();
+  if(text.length > maxLen) text = text.slice(0, maxLen).trim() + '…';
+  return text;
+}
+
+function collectTags(){
+  const tagSet = new Set();
+  allSnippets.forEach(s => s.tags.forEach(t => tagSet.add(t)));
+  const words = [...tagSet];
+  return words.length ? shuffle(words) : shuffle([...fallbackWords]);
+}
+
+function parseSnippet(text, filename){
+  const match = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  if(!match){
+    console.warn(`${filename}: no valid frontmatter found`);
+    return null;
+  }
+  const meta = parseFrontmatter(match[1]);
+  const body = match[2];
+
+  const codeMatch = body.match(/```(\w*)\n([\s\S]*?)```/);
+  let description = body.trim();
+  let code = '';
+  if(codeMatch){
+    description = body.slice(0, codeMatch.index).trim();
+    code = codeMatch[2].replace(/\n$/, '');
+    if(!meta.language) meta.language = codeMatch[1] || 'powershell';
+  }
+
+  return {
+    id: meta.id || filename.replace(/\.md$/, ''),
+    title: meta.title || filename,
+    language: meta.language || 'powershell',
+    tags: meta.tags || [],
+    prerequisites: meta.prerequisites || [],
+    description,
+    code
+  };
+}
+
+/* Simple YAML parser for flat frontmatter blocks (key: value, key: [a, b]) */
+function parseFrontmatter(yamlBlock){
+  const meta = {};
+  yamlBlock.split('\n').forEach(line => {
+    const idx = line.indexOf(':');
+    if(idx === -1) return;
+    const key = line.slice(0, idx).trim();
+    let value = line.slice(idx + 1).trim();
+
+    if(value.startsWith('[') && value.endsWith(']')){
+      const inner = value.slice(1, -1).trim();
+      value = inner.length
+        ? inner.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''))
+        : [];
+    } else {
+      value = value.replace(/^["']|["']$/g, '');
+    }
+    meta[key] = value;
+  });
+  return meta;
+}
+
+/* --- Rendering (unchanged from the previous version) --- */
+
+function renderTags(){
+  const source = currentView === 'scripts' ? allScripts : allSnippets;
+  const tagSet = new Set();
+  source.forEach(s => s.tags.forEach(t => tagSet.add(t)));
+  const container = document.getElementById('tags');
+  container.innerHTML = '';
+  [...tagSet].sort().forEach(tag => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.textContent = tag;
+    el.onclick = () => {
+      if(currentView === 'scripts'){
+        activeScriptTag = activeScriptTag === tag ? null : tag;
+      } else {
+        activeTag = activeTag === tag ? null : tag;
+      }
+      renderTagState();
+      render();
+    };
+    el.dataset.tag = tag;
+    container.appendChild(el);
+  });
+  renderTagState();
+}
+
+function renderTagState(){
+  const active = currentView === 'scripts' ? activeScriptTag : activeTag;
+  document.querySelectorAll('.tag').forEach(el => {
+    el.classList.toggle('active', el.dataset.tag === active);
+  });
+}
+
+function setView(view, btn){
+  currentView = view;
+  document.querySelectorAll('#viewSwitch button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('search').value = '';
+  document.getElementById('promptLabel').textContent =
+    view === 'scripts' ? 'PS C:\\Scripts>' : 'PS C:\\Snippets>';
+  renderTags();
+  render();
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+function render(){
+  if(currentView === 'scripts') return renderScripts();
+  return renderSnippets();
+}
+
+function renderSnippets(){
+  const query = document.getElementById('search').value.trim().toLowerCase();
+
+  const filtered = allSnippets.filter(s => {
+    const matchesTag = !activeTag || s.tags.includes(activeTag);
+    const haystack = (s.title + ' ' + s.description + ' ' + s.tags.join(' ')).toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesTag && matchesQuery;
+  });
+
+  document.getElementById('countText').textContent =
+    `${filtered.length} of ${allSnippets.length} snippets`;
+
+  const results = document.getElementById('results');
+  const empty = document.getElementById('empty');
+
+  if(filtered.length === 0){
+    results.innerHTML = '';
+    empty.style.display = allSnippets.length ? 'block' : 'none';
+    empty.textContent = 'No matches. Try a different search or tag filter.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  results.innerHTML = filtered.map(s => `
+    <div class="card">
+      <div class="card-head" onclick="openModal('${escapeHtml(s.id)}')">
+        <div class="card-title-row">
+          <div class="card-title">${escapeHtml(s.title)}</div>
+          <div class="card-meta">
+            <span class="lang-badge">${escapeHtml(s.language)}</span>
+            <span class="chevron"></span>
+          </div>
+        </div>
+        <div class="card-tags-preview">
+          ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderScripts(){
+  const query = document.getElementById('search').value.trim().toLowerCase();
+
+  const filtered = allScripts.filter(s => {
+    const matchesTag = !activeScriptTag || s.tags.includes(activeScriptTag);
+    const haystack = (s.title + ' ' + s.readme + ' ' + s.tags.join(' ')).toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesTag && matchesQuery;
+  });
+
+  document.getElementById('countText').textContent =
+    `${filtered.length} of ${allScripts.length} scripts`;
+
+  const results = document.getElementById('results');
+  const empty = document.getElementById('empty');
+
+  if(filtered.length === 0){
+    results.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = allScripts.length
+      ? 'No matches. Try a different search or tag filter.'
+      : 'No scripts yet. Add a folder under /scripts with meta.json + script.ps1.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  results.innerHTML = filtered.map(s => `
+    <div class="script-card">
+      <div class="script-top" onclick="openScriptModal('${escapeHtml(s.id)}')">
+        <div class="script-title">${escapeHtml(s.title)}</div>
+        ${s.version ? `<span class="version-badge">v${escapeHtml(s.version)}</span>` : ''}
+      </div>
+      <div class="script-desc" onclick="openScriptModal('${escapeHtml(s.id)}')">${escapeHtml(s.excerpt)}</div>
+      <div class="script-tags">
+        ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+      </div>
+      <div class="script-meta-row">
+        <span></span>
+        <div class="script-actions">
+          <button class="btn-ghost" onclick="openScriptModal('${escapeHtml(s.id)}')">Details</button>
+          <a class="btn-solid" href="${s.downloadUrl}" download="${escapeHtml(s.id)}.ps1" onclick="event.stopPropagation()">↓ Download</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+let currentModalCode = '';
+
+function openModal(id){
+  const s = allSnippets.find(x => x.id === id);
+  if(!s) return;
+  currentModalCode = s.code;
+
+  document.getElementById('modalPanel').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${escapeHtml(s.title)}</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-lang">${escapeHtml(s.language)}</div>
+    <div class="modal-desc">${escapeHtml(s.description)}</div>
+    <div class="card-tags">
+      ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+    </div>
+    ${s.prerequisites && s.prerequisites.length ? `
+    <div class="prereqs">
+      <div class="prereqs-label">Prerequisites</div>
+      <ul>${s.prerequisites.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>
+    </div>` : ''}
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+      <pre><code>${escapeHtml(s.code)}</code></pre>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openScriptModal(id){
+  const s = allScripts.find(x => x.id === id);
+  if(!s) return;
+  currentModalCode = s.code;
+
+  document.getElementById('modalPanel').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${escapeHtml(s.title)}</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-lang">${s.version ? 'v' + escapeHtml(s.version) : 'powershell'}</div>
+    <div class="card-tags">
+      ${s.tags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+    </div>
+    <div class="md-body">${s.readme ? mdToHtml(s.readme) : '<p class="md-empty">No README.md found for this script.</p>'}</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+      <pre><code>${escapeHtml(s.code)}</code></pre>
+    </div>
+    <div class="modal-actions">
+      <a class="btn-solid" href="${s.downloadUrl}" download="${escapeHtml(s.id)}.ps1">↓ Download script.ps1</a>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentModalCode = '';
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeModal();
+});
+
+function copyCode(btn){
+  navigator.clipboard.writeText(currentModalCode).then(() => {
+    const label = btn.querySelector('span');
+    label.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      label.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+
+function clearSearch(){
+  const input = document.getElementById('search');
+  input.value = '';
+  render();
+  input.focus();
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('search').addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') clearSearch();
+});
+
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+clearSearchBtn.addEventListener('click', clearSearch);
+clearSearchBtn.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); clearSearch(); }
+});
+
+/* --- Typewriter placeholder cycling through real tags, random order --- */
+
+const fallbackWords = [
+  'Intune', 'Citrix VDA', 'Entra ID', 'Graph', 'FSLogix',
+  'RDS', 'NetScaler', 'Windows', 'Conditional Access', 'Autopilot',
+  'XenServer', 'Igel UMS', 'Igel OS', 'Igel ICG', 'NVIDIA'
+];
+
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startTypewriter(words){
+  const input = document.getElementById('search');
+  const prefix = 'find --tag ';
+  let wordIndex = 0;
+  let charIndex = 0;
+  let deleting = false;
+  let paused = false;
+  let timeoutId = null;
+
+  function tick(){
+    if(paused) return;
+
+    const word = words[wordIndex];
+
+    if(!deleting){
+      charIndex++;
+      input.placeholder = prefix + word.slice(0, charIndex);
+      if(charIndex === word.length){
+        timeoutId = setTimeout(tick, 2200); // Pause on full word
+        deleting = true;
+        return;
+      }
+      timeoutId = setTimeout(tick, 65);
+    } else {
+      charIndex--;
+      input.placeholder = prefix + word.slice(0, charIndex);
+      if(charIndex === 0){
+        deleting = false;
+        wordIndex++;
+        if(wordIndex >= words.length){
+          wordIndex = 0;
+          shuffle(words); // re-shuffle after a full pass for continued randomness
+        }
+        timeoutId = setTimeout(tick, 300);
+        return;
+      }
+      timeoutId = setTimeout(tick, 30);
+    }
+  }
+
+  input.placeholder = prefix;
+  timeoutId = setTimeout(tick, 500);
+
+  input.addEventListener('focus', () => {
+    paused = true;
+    clearTimeout(timeoutId);
+    input.placeholder = 'find --tag ...';
+  });
+  input.addEventListener('blur', () => {
+    if(input.value.trim()) return;
+    paused = false;
+    charIndex = 0;
+    deleting = false;
+    tick();
+  });
+}
+
+loadSnippets();
+
+/* --- Theme toggle (dark default, light optional, persisted) --- */
+
+(function initTheme(){
+  const stored = localStorage.getItem('snippet-lib-theme');
+  const preferLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const theme = stored || (preferLight ? 'light' : 'dark');
+  if(theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if(isLight){
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('snippet-lib-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('snippet-lib-theme', 'light');
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
