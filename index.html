@@ -565,31 +565,22 @@ let allScripts = [];
 let activeScriptTag = null;
 let currentView = 'snippets';
 
-/* --- GitHub source config ---
-   Public repo required: raw.githubusercontent.com allows unauthenticated
-   cross-origin fetches for public repos, and the api.github.com Contents
-   endpoint lists directory contents live — no manifest.json to maintain.
-   Replace owner/repo/branch with your actual GitHub repo. */
-const GITHUB_CONFIG = {
-  owner: 'rChilLab',
-  repo: 'workspace-runbook',
-  branch: 'main'
-};
-const SNIPPETS_BASE =
-  `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/snippets`;
-const SCRIPTS_BASE =
-  `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/scripts`;
-const API_BASE =
-  `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents`;
+/* --- Content source: Cloudflare Worker proxy ---
+   The client never talks to GitHub directly — it only knows the proxy
+   domain. Owner/repo/branch live server-side in the Worker's environment
+   variables, not here. */
+const PROXY_BASE = 'https://api.rchilla.io';
+const LIST_BASE = `${PROXY_BASE}/list`;
+const SNIPPETS_BASE = `${PROXY_BASE}/raw/snippets`;
+const SCRIPTS_BASE = `${PROXY_BASE}/raw/scripts`;
 
-/* Lists a directory's entries via the GitHub Contents API.
-   filterType: 'file' or 'dir'. Throws on API error (rate limit, 404, etc). */
+/* Lists a directory's entries via the proxy's /list endpoint.
+   filterType: 'file' or 'dir'. Throws on error (proxy down, path missing, etc). */
 async function listRepoDir(path, filterType){
-  const res = await fetch(`${API_BASE}/${path}?ref=${GITHUB_CONFIG.branch}`);
+  const res = await fetch(`${LIST_BASE}/${path}`);
   if(!res.ok){
-    if(res.status === 403) throw new Error('GitHub API rate limit reached, try again shortly');
-    if(res.status === 404) throw new Error(`${path}/ not found in repo`);
-    throw new Error(`GitHub API error ${res.status}`);
+    if(res.status === 404) throw new Error(`${path}/ not found`);
+    throw new Error(`Proxy error ${res.status}`);
   }
   const entries = await res.json();
   return entries.filter(e => e.type === filterType);
@@ -636,8 +627,8 @@ async function loadSnippets(){
     statusEl.textContent = 'Failed to load';
     statusEl.classList.add('error');
     document.getElementById('results').innerHTML =
-      `<div class="empty">Could not load snippets from GitHub (${escapeHtml(e.message)}).<br>
-       Check GITHUB_CONFIG (owner/repo/branch) at the top of the script, and make sure the repo is public.</div>`;
+      `<div class="empty">Could not load snippets (${escapeHtml(e.message)}).<br>
+       Check that PROXY_BASE at the top of the script points to a reachable Worker.</div>`;
     startTypewriter(shuffle([...fallbackWords]));
   }
 }
