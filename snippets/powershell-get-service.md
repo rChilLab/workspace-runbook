@@ -6,8 +6,8 @@ tags: ["Citrix", "Admin","Microsoft"]
 prerequisites: []
 ---
 
-End a stuck user session when reconnect or disconnect no longer works.
+Check which status has got the Service you need
 
 ```powershell
-Get-Service | select -property name,starttype
+Get-Service <ServiceName> | select -property name,starttype
 ```
