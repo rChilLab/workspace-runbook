@@ -41,5 +41,6 @@
   "win-profile-size-check.md",
   "win-service-status-multi.md",
   "xenserver-host-status.md",
-  "xenserver-vm-resource-usage.md"
+  "xenserver-vm-resource-usage.md",
+  "get-service.md"
 ]
