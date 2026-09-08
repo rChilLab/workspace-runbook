@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>runbook // Modern Workplace</title>
+<title>Runbook // Modern Workplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1006,7 +1006,6 @@ function renderScripts(){
         <span></span>
         <div class="script-actions">
           <button class="btn-ghost" onclick="openScriptModal('${escapeHtml(s.id)}')">Details</button>
-          <a class="btn-solid" href="${s.downloadUrl}" download="${escapeHtml(s.id)}.ps1" onclick="event.stopPropagation()">↓ Download</a>
         </div>
       </div>
     </div>
@@ -1093,7 +1092,12 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
   if(e.target.id === 'modalOverlay') closeModal();
 });
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape') closeModal();
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('modalOverlay').classList.contains('open')){
+    closeModal();
+  } else {
+    clearSearch();
+  }
 });
 
 function copyCode(btn){
@@ -1122,9 +1126,6 @@ function clearSearch(){
 }
 
 document.getElementById('search').addEventListener('input', render);
-document.getElementById('search').addEventListener('keydown', (e) => {
-  if(e.key === 'Escape') clearSearch();
-});
 
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 clearSearchBtn.addEventListener('click', clearSearch);
