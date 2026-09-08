@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snippet-Lib // Modern Workplace</title>
+<title>runbook // Modern Workplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1111,6 +1111,12 @@ function copyCode(btn){
 function clearSearch(){
   const input = document.getElementById('search');
   input.value = '';
+  if(currentView === 'scripts'){
+    activeScriptTag = null;
+  } else {
+    activeTag = null;
+  }
+  renderTagState();
   render();
   input.focus();
 }
